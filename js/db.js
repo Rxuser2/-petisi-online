@@ -1,28 +1,22 @@
 /**
  * js/db.js
- * Database abstraction layer using Puter.js (puter.kv) with a localStorage fallback.
+ * Database abstraction layer using the Netlify API with a localStorage fallback.
+ * localStorage fallback is used only when the network/API is unreachable.
  */
 
 const DB = {
     useFallback: false,
+    _cache: null,
 
     async init() {
         try {
-            // Attempt to check Puter.js initialization within 3 seconds
-            await Promise.race([
-                (async () => {
-                    for (let i = 0; i < 30; i++) {
-                        if (typeof puter !== 'undefined') break;
-                        await new Promise(r => setTimeout(r, 100));
-                    }
-                    if (typeof puter === 'undefined') throw new Error('Puter SDK not found');
-                    // Simple ping to ensure kv is responsive
-                    await puter.kv.get('__ping');
-                })(),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Puter SDK Timeout')), 3000))
+            const res = await Promise.race([
+                fetch('/api/count'),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
             ]);
+            if (!res.ok) throw new Error('API error: ' + res.status);
         } catch (error) {
-            console.warn('Puter.js failed to init within 3s. Menggunakan localStorage.', error);
+            console.warn('API tidak tersedia. Menggunakan penyimpanan lokal.', error);
             this.useFallback = true;
             const banner = document.getElementById('fallback-warning');
             if (banner) banner.classList.remove('hidden');
@@ -32,19 +26,31 @@ const DB = {
     async set(key, value) {
         if (this.useFallback) {
             localStorage.setItem(key, JSON.stringify(value));
-        } else {
-            await puter.kv.set(key, JSON.stringify(value));
+            return;
         }
+        const res = await fetch('/api/signatures', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key, ...value })
+        });
+        if (!res.ok) throw new Error('Gagal menyimpan data ke server');
+        // Invalidate cache so next list() re-fetches
+        this._cache = null;
     },
 
     async get(key) {
         if (this.useFallback) {
             const val = localStorage.getItem(key);
             return val ? JSON.parse(val) : null;
-        } else {
-            const val = await puter.kv.get(key);
-            return val ? JSON.parse(val) : null;
         }
+        // Use cache populated by the last list() call
+        if (this._cache && key in this._cache) {
+            return this._cache[key];
+        }
+        const res = await fetch('/api/signatures?key=' + encodeURIComponent(key));
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data;
     },
 
     async list(prefix = '') {
@@ -52,35 +58,58 @@ const DB = {
             return Object.keys(localStorage)
                 .filter(k => k.startsWith(prefix))
                 .map(k => ({ key: k }));
-        } else {
-            // Puter.js v2 kv.list signature
-            return await puter.kv.list(undefined, { prefix });
         }
+        const res = await fetch('/api/signatures');
+        if (!res.ok) return [];
+        const signatures = await res.json();
+        // Cache full data so subsequent get() calls avoid extra round-trips
+        this._cache = {};
+        signatures.forEach(s => { this._cache[s.key] = s; });
+        return signatures.map(s => ({ key: s.key }));
     },
 
     async del(key) {
         if (this.useFallback) {
             localStorage.removeItem(key);
-        } else {
-            await puter.kv.del(key);
+            return;
         }
+        const res = await fetch('/api/signatures', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key })
+        });
+        if (!res.ok) throw new Error('Gagal menghapus data');
+        if (this._cache) delete this._cache[key];
     },
 
     async incrementCount() {
-        const current = (await this.get('meta_count')) || 0;
-        const next = current + 1;
-        await this.set('meta_count', next);
-        return next;
+        if (this.useFallback) {
+            const current = parseInt(localStorage.getItem('meta_count') || '0', 10);
+            const next = current + 1;
+            localStorage.setItem('meta_count', next);
+            return next;
+        }
+        // Server-side count is always derived from the DB; nothing to do here
+        return 0;
     },
 
     async decrementCount() {
-        const current = (await this.get('meta_count')) || 0;
-        const next = Math.max(0, current - 1);
-        await this.set('meta_count', next);
-        return next;
+        if (this.useFallback) {
+            const current = parseInt(localStorage.getItem('meta_count') || '0', 10);
+            const next = Math.max(0, current - 1);
+            localStorage.setItem('meta_count', next);
+            return next;
+        }
+        return 0;
     },
 
     async getCount() {
-        return (await this.get('meta_count')) || 0;
+        if (this.useFallback) {
+            return parseInt(localStorage.getItem('meta_count') || '0', 10);
+        }
+        const res = await fetch('/api/count');
+        if (!res.ok) return 0;
+        const data = await res.json();
+        return data.count;
     }
 };
