@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petisi Mesin Pelet Limbah - SMP Santo Yusup</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        emerald: { 400: '#34d399', 500: '#10b981', 600: '#059669' },
+                        green: { 400: '#4ade80' },
+                        yellow: { 400: '#facc15' },
+                        slate: { 50: '#f8fafc', 500: '#64748b', 800: '#1e293b' },
+                        red: { 500: '#ef4444' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .hero-enter { animation: fadeUp 0.5s ease-out forwards; opacity: 0; transform: translateY(20px); }
+        .form-enter { animation: fadeUp 0.5s ease-out 0.15s forwards; opacity: 0; transform: translateY(20px); }
+        .slide-in-toast { animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .stagger-item { animation: fadeUp 0.4s ease-out forwards; opacity: 0; transform: translateY(10px); }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen pb-16">
+    <div id="fallback-warning" class="hidden bg-yellow-400 text-slate-800 text-center py-2 text-sm font-medium z-50 sticky top-0 shadow-md">
+        Mode Offline Aktif (Puter.js lambat/gagal). Data hanya tersimpan di perangkat ini.
+    </div>
+
+    <!-- Hero Section -->
+    <header class="max-w-3xl mx-auto px-4 pt-12 text-center hero-enter">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 mb-6 shadow-sm">
+            <!-- Recycle / Eco Icon -->
+            <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-bold text-emerald-600 mb-4 tracking-tight">Dukung SMP Santo Yusup Kurangi Limbah Makanan!</h1>
+        <p class="text-slate-500 md:text-lg max-w-2xl mx-auto leading-relaxed">
+            Pengadaan Mesin Pelet Limbah akan mengubah sisa makanan kantin menjadi pakan bernilai guna. Langkah nyata mengurangi beban TPA, menghemat energi sekolah, dan meraih poin adiwiyata untuk masa depan lingkungan yang lebih baik.
+        </p>
+    </header>
+
+    <!-- Progress Bar -->
+    <section class="max-w-2xl mx-auto px-4 mt-10 hero-enter">
+        <div class="flex justify-between items-end mb-2 text-sm font-medium">
+            <span class="text-slate-500">Progres Target</span>
+            <span id="progress-text" class="text-emerald-600 font-bold text-base">0 dari 500 tanda tangan</span>
+        </div>
+        <div class="h-6 bg-slate-200 rounded-full overflow-hidden relative shadow-inner">
+            <div id="progress-bar" class="h-full bg-emerald-500 transition-colors ease-out flex items-center justify-end px-2 text-xs font-bold text-white w-0" style="transition-duration: 600ms; transition-property: width, background-color;">
+                <span id="progress-percent" class="hidden">0%</span>
+            </div>
+        </div>
+    </section>
+
+    <main class="max-w-2xl mx-auto px-4 mt-10 form-enter">
+        <!-- Error Banner -->
+        <div id="form-error" class="hidden mb-4 p-4 bg-red-50 border border-red-200 text-red-500 rounded-lg text-sm" role="alert"></div>
+        
+        <!-- Form Card -->
+        <div id="petition-card" class="bg-white/70 backdrop-blur-md border border-white/40 shadow-xl rounded-2xl p-6 sm:p-8 relative">
+            <h2 class="text-xl font-bold mb-6 border-b pb-2">Isi Data Dukungan</h2>
+            <form id="petition-form" class="space-y-5">
+                <div>
+                    <label for="name" class="block text-sm font-medium mb-1">Nama Lengkap <span class="text-red-500">*</span></label>
+                    <input type="text" id="name" required minlength="3" maxlength="60" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-shadow" placeholder="Masukkan nama Anda">
+                    <p id="err-name" class="text-red-500 text-xs mt-1 hidden"></p>
+                </div>
+                <div>
+                    <label for="role" class="block text-sm font-medium mb-1">Kelas / Jabatan <span class="text-red-500">*</span></label>
+                    <select id="role" required class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white">
+                        <option value="">Pilih...</option>
+                        <option value="Kelas 7">Kelas 7</option>
+                        <option value="Kelas 8">Kelas 8</option>
+                        <option value="Kelas 9">Kelas 9</option>
+                        <option value="Guru">Guru</option>
+                        <option value="Staf / Karyawan">Staf / Karyawan</option>
+                    </select>
+                    <p id="err-role" class="text-red-500 text-xs mt-1 hidden"></p>
+                </div>
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label for="reason" class="block text-sm font-medium">Alasan Dukungan <span class="text-slate-400 font-normal">(Opsional)</span></label>
+                        <span id="char-count" class="text-xs text-slate-500">0 / 200</span>
+                    </div>
+                    <textarea id="reason" maxlength="200" rows="3" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none resize-none placeholder-slate-400" placeholder="Mengapa Anda mendukung program ini?"></textarea>
+                </div>
+                <button type="submit" id="submit-btn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 rounded-lg shadow-lg hover:shadow-xl transition-all flex justify-center items-center gap-2">
+                    <span>Tandatangani Petisi</span>
+                    <svg id="spinner" class="animate-spin h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </button>
+            </form>
+        </div>
+
+        <!-- Success Card -->
+        <div id="success-card" class="hidden bg-white/70 backdrop-blur-md border border-white/40 shadow-xl rounded-2xl p-8 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-500 mb-4">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800 mb-2" id="success-title">Anda sudah menandatangani!</h2>
+            <p class="text-slate-500" id="success-msg"></p>
+        </div>
+
+        <!-- Recent Signers -->
+        <div class="mt-12" id="recent-section">
+            <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+                Dukungan Terbaru
+            </h3>
+            <div id="recent-list" class="space-y-3">
+                <div class="text-center py-6 text-slate-500 bg-white/50 rounded-xl border border-dashed border-slate-300">
+                    Memuat data...
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://js.puter.com/v2/"></script>
+    <script src="js/db.js"></script>
+    <script src="js/petition.js"></script>
+</body>
+</html>
