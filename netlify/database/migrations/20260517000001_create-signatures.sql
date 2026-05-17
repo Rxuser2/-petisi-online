@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS signatures (
+  id SERIAL PRIMARY KEY,
+  key TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  role TEXT NOT NULL,
+  reason TEXT NOT NULL DEFAULT '',
+  timestamp BIGINT NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);
