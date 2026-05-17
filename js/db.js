@@ -11,6 +11,10 @@ const DB = {
             // Attempt to check Puter.js initialization within 3 seconds
             await Promise.race([
                 (async () => {
+                    for (let i = 0; i < 30; i++) {
+                        if (typeof puter !== 'undefined') break;
+                        await new Promise(r => setTimeout(r, 100));
+                    }
                     if (typeof puter === 'undefined') throw new Error('Puter SDK not found');
                     // Simple ping to ensure kv is responsive
                     await puter.kv.get('__ping');
